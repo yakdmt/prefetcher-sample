@@ -3,4 +3,16 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <color name="holder_red">#44FF0000</color>
+    <color name="holder_orange">#44FF7F00</color>
+    <color name="holder_yellow">#44FFFF00</color>
+    <color name="holder_green">#4400FF00</color>
+    <color name="holder_blue">#440000FF</color>
+    <color name="holder_indigo">#444B0082</color>
+    <color name="holder_violet">#448B00FF</color>
+
+    <color name="holder_brown">#444b3832</color>
+    <color name="holder_fuchsia">#44FF00FF</color>
+    <color name="holder_gold">#44FFD700</color>
 </resources>

@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.Switch
 import androidx.fragment.app.Fragment
 import xyz.yakdmt.prefetcherapp.list.HeavyListFragment
+import xyz.yakdmt.prefetcherapp.list.HeavyListFragment.Companion.KEY_PREFETCHER_ENABLED
 
 class MainFragment : Fragment() {
 
@@ -25,7 +26,11 @@ class MainFragment : Fragment() {
         usePrefetcherSwitch = view.findViewById(R.id.use_prefetcher_switch)
 
         goToListButton.setOnClickListener {
-            val listFragment = HeavyListFragment()
+            val listFragment = HeavyListFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean(KEY_PREFETCHER_ENABLED, usePrefetcherSwitch.isChecked)
+                }
+            }
 
             activity?.supportFragmentManager?.beginTransaction()?.let {
                 it.replace(R.id.fragment_container, listFragment)

@@ -1,14 +1,14 @@
 package xyz.yakdmt.prefetcher
 
-import android.util.Log
+import timber.log.Timber
 
 internal object RecyclerPrefetchingLogger {
 
-    private const val LOGGING_ENABLED = false
+    private const val LOGGING_ENABLED = true
 
     inline fun log(text: () -> String) {
         if (LOGGING_ENABLED && BuildConfig.DEBUG) {
-            Log.d("PrefetchLogger", text())
+            Timber.d(text())
         }
     }
 

@@ -82,8 +82,11 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
         if (created > prefetch) Log.w("PrefetchViewPool", "ViewPool cache miss: created=$created, prefetch=$prefetch, cached=${getRecycledViewCount(viewType)}, holder=${getViewTypeName(viewType)}")
     }
 
-    private val viewTypeNames by lazy { SparseArray<String>() }
-    private fun getViewTypeName(viewType: Int) = viewTypeNames.get(viewType) ?: activity.resources.getResourceName(viewType).also { viewTypeNames.put(viewType, it) }
+    //TODO
+//    private val viewTypeNames by lazy { SparseArray<String>() }
+//    private fun getViewTypeName(viewType: Int) = viewTypeNames.get(viewType) ?: activity.resources.getResourceName(viewType).also { viewTypeNames.put(viewType, it) }
+
+    private fun getViewTypeName(viewType: Int) = viewType.toString()
 }
 
 operator fun SparseIntArray.set(key: Int, value: Int) = put(key, value)
