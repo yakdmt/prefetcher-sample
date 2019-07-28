@@ -16,6 +16,15 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"/>
 
+    <Switch
+        android:id="@+id/use_gapworker_switch"
+        android:layout_gravity="center"
+        android:text="Use gapworker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+
     <Button
         android:id="@+id/go_to_list_button"
         android:layout_width="wrap_content"
