@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView
 import xyz.yakdmt.prefetcher.api.PrefetchRecycledViewPool
 import xyz.yakdmt.prefetcher.api.Prefetcher
 import xyz.yakdmt.prefetcher.gapworker.api.WrappedGapWorkerRecyclerView
+import xyz.yakdmt.prefetcher.perfomance.DroppedFrameCounter
 import xyz.yakdmt.prefetcherapp.R
 import xyz.yakdmt.prefetcherapp.models.HeavyModelFactory
 
@@ -22,6 +23,7 @@ class HeavyListFragment : Fragment() {
     }
 
     private lateinit var recyclerView: WrappedGapWorkerRecyclerView
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return View.inflate(context, R.layout.fragment_list, null)
@@ -42,6 +44,7 @@ class HeavyListFragment : Fragment() {
         if (arguments?.getBoolean(KEY_PREFETCHER_ENABLED) == true) {
             prefetchItems(viewPool)
         }
+
         recyclerView.enableCustomGapworker = arguments?.getBoolean(KEY_GAPWORKER_ENABLED) ?: false
     }
 
