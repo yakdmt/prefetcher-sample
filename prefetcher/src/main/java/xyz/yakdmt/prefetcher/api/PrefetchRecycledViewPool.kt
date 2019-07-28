@@ -18,6 +18,8 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
     private val prefetchRegistry = if (BuildConfig.DEBUG) SparseIntArray() else null
     private val createdRegistry = if (BuildConfig.DEBUG) SparseIntArray() else null
 
+    var listener: PrefetchedViewsCountListener? = null
+
     override fun setPrefetchedViewsCount(viewType: Int, count: Int, holderCreator: (fakeParent: ViewGroup, viewType: Int) -> RecyclerView.ViewHolder) {
         if (count <= 0) throw IllegalArgumentException("Prefetched count should be > 0")
         RecyclerPrefetchingLogger.log { "change views count: new=$count" }
@@ -36,7 +38,7 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
 
     override fun putRecycledView(scrap: RecyclerView.ViewHolder) {
         val viewType = scrap.itemViewType
-        setMaxRecycledViews(viewType, 100)
+        setMaxRecycledViews(viewType, 200)
         RecyclerPrefetchingLogger.log { "putRecycled view for viewType=${getViewTypeName(viewType)}" }
 
         super.putRecycledView(scrap)
@@ -74,6 +76,16 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
         factorInCreateTime(scrap.viewType, creationTimeNs)
         putRecycledView(scrap)
         createdRegistry?.let { it[scrap.viewType]++ }
+
+        listener?.onViewCountChanged(calculatePrefetchedCount())
+    }
+
+    private fun calculatePrefetchedCount(): Int {
+        var result = 0
+        for (i in 0..10) {
+            result += createdRegistry?.let { it[i] } ?: 0
+        }
+        return result
     }
 
     private fun logPrefetchCountOverflow(viewType: Int) {
@@ -90,3 +102,7 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
 }
 
 operator fun SparseIntArray.set(key: Int, value: Int) = put(key, value)
+
+interface PrefetchedViewsCountListener {
+    fun onViewCountChanged(count: Int)
+}

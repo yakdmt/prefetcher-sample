@@ -5,10 +5,14 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.android.synthetic.main.fragment_list.view.*
 import xyz.yakdmt.prefetcher.api.PrefetchRecycledViewPool
+import xyz.yakdmt.prefetcher.api.PrefetchedViewsCountListener
 import xyz.yakdmt.prefetcher.api.Prefetcher
 import xyz.yakdmt.prefetcher.gapworker.api.WrappedGapWorkerRecyclerView
 import xyz.yakdmt.prefetcher.perfomance.DroppedFrameCounter
@@ -23,7 +27,10 @@ class HeavyListFragment : Fragment() {
     }
 
     private lateinit var recyclerView: WrappedGapWorkerRecyclerView
+    private lateinit var viewCounter: TextView
+    private lateinit var progress: ProgressBar
 
+    private lateinit var viewPool: PrefetchRecycledViewPool
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return View.inflate(context, R.layout.fragment_list, null)
@@ -33,12 +40,23 @@ class HeavyListFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         recyclerView = view.findViewById(R.id.list)
+        viewCounter = view.findViewById(R.id.view_counter)
+        progress = view.findViewById(R.id.progress)
 
         recyclerView.adapter = HeavyListAdapter(HeavyModelFactory.create(500))
         recyclerView.layoutManager = LinearLayoutManager(activity)
         recyclerView.adapter?.notifyDataSetChanged()
 
-        val viewPool = PrefetchRecycledViewPool(activity as Activity)
+        viewPool = PrefetchRecycledViewPool(activity as Activity)
+        viewPool.listener = object : PrefetchedViewsCountListener {
+            override fun onViewCountChanged(count: Int) {
+                viewCounter.text = "Views prefetched: $count"
+                progress.progress = count
+            }
+        }
+
+
+        viewPool.start()
         recyclerView.setRecycledViewPool(viewPool)
 
         if (arguments?.getBoolean(KEY_PREFETCHER_ENABLED) == true) {
@@ -46,6 +64,11 @@ class HeavyListFragment : Fragment() {
         }
 
         recyclerView.enableCustomGapworker = arguments?.getBoolean(KEY_GAPWORKER_ENABLED) ?: false
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewPool.terminate()
     }
 
     private fun prefetchItems(prefetcher: Prefetcher) {
