@@ -11,3 +11,5 @@ class PrefetcherApp : Application() {
         Timber.plant(Timber.DebugTree())
     }
 }
+
+const val enableImprovements = true
