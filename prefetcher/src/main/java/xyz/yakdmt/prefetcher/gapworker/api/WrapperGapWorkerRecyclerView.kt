@@ -11,20 +11,24 @@ class WrappedGapWorkerRecyclerView @JvmOverloads constructor(context: Context, a
     : RecyclerView(context, attrs, defStyleAttr) {
 
     companion object {
-        private val cancellableGapWorker by lazy { if (ALLOW_THREAD_GAP_WORK) GapWorkerWrapper() else null }
+        private val customGapWorker by lazy { if (ALLOW_THREAD_GAP_WORK) GapWorkerWrapper() else null }
     }
 
     var enableCustomGapworker = false
 
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
-        cancellableGapWorker?.attach()
+        customGapWorker?.attach()
     }
 
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
-        cancellableGapWorker?.detach()
+        customGapWorker?.detach()
     }
 
-    override fun post(runnable: Runnable) = super.post(runnable.takeIf { !isGapWorker(it) || cancellableGapWorker == null || !enableCustomGapworker } ?: cancellableGapWorker)
+    override fun post(runnable: Runnable): Boolean {
+        val shouldGetOriginalRunnable = !isGapWorker(runnable) || customGapWorker == null || !enableCustomGapworker
+        val customRunnable = runnable.takeIf { shouldGetOriginalRunnable } ?: customGapWorker
+        return super.post(customRunnable)
+    }
 }

@@ -11,14 +11,14 @@ class DroppedFrameCounter(context: Context) : Choreographer.FrameCallback {
         private val NEVER: Long = -1
     }
     // Last timestamp received from a frame callback, used to measure the next frame interval
-    private var lastTimestampNanoseconds = NEVER
+    private var lastTimestampNs = NEVER
     // Sentinel value indicating we have not yet received a frame callback since the observer was enabled
     // e.g. 0.01666 for a 60 Hz screen
     private var hardwareFrameIntervalSeconds: Double = 0.0
 
     var framesListener: DroppedFramesListener? = null
 
-    var droppedFrames = 0
+    private var droppedFrames = 0
         private set
 
     init {
@@ -37,18 +37,13 @@ class DroppedFrameCounter(context: Context) : Choreographer.FrameCallback {
         choreographer.postFrameCallback(this)
     }
 
-    override fun doFrame(frameTimeNanos: Long) {
-        val frameIntervalNanoseconds = frameTimeNanos - lastTimestampNanoseconds
+    override fun doFrame(frameTimeNs: Long) {
+        val frameIntervalNs = frameTimeNs - lastTimestampNs
 
-        // To detect a dropped frame, we need to know the interval between two frame callbacks.
-        // If this is the first, wait for the second.
-        if (lastTimestampNanoseconds != NEVER) {
-            // With no dropped frames, frame intervals will roughly equal the hardware interval.
-            // 2x the hardware interval means we definitely dropped one frame.
-            // So our measuring stick is 1.5x.
+        if (lastTimestampNs != NEVER) {
             val droppedFrameIntervalSeconds = hardwareFrameIntervalSeconds * 1.5
 
-            val frameIntervalSeconds = frameIntervalNanoseconds / 1_000_000_000.0
+            val frameIntervalSeconds = frameIntervalNs / 1_000_000_000.0
 
             if (droppedFrameIntervalSeconds < frameIntervalSeconds) {
                 droppedFrames += truncate(frameIntervalSeconds / hardwareFrameIntervalSeconds).toInt() - 1
@@ -56,12 +51,12 @@ class DroppedFrameCounter(context: Context) : Choreographer.FrameCallback {
             }
         }
 
-        lastTimestampNanoseconds = frameTimeNanos
+        lastTimestampNs = frameTimeNs
         Choreographer.getInstance().postFrameCallback(this)
     }
 
     fun reset() {
-        lastTimestampNanoseconds = NEVER
+        lastTimestampNs = NEVER
         droppedFrames = 0
     }
 

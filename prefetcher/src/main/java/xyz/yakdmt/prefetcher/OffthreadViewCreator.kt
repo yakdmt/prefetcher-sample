@@ -25,9 +25,11 @@ private const val HIGH_PRIORITY = 1L
 private const val MID_PRIORITY = 2L
 private const val LOW_PRIORITY = 3L
 
-private typealias HolderCreator = (fakeParent: ViewGroup, viewType: Int) -> RecyclerView.ViewHolder //fakeParent is necessary to allow parsing MarginLayoutParams from xml
+//fakeParent is necessary to allow parsing MarginLayoutParams from xml
+private typealias HolderCreator =
+            (fakeParent: ViewGroup, viewType: Int) -> RecyclerView.ViewHolder
 
-internal class OffthreadViewPrefetcher(
+internal class OffthreadViewCreator(
         activity: Activity,
         private val holderConsumer: (holder: RecyclerView.ViewHolder, creationTimeNs: Long) -> Unit,
         private val thread: HandlerThread = HandlerThread("ViewPrefetcherThread", Process.THREAD_PRIORITY_BACKGROUND),

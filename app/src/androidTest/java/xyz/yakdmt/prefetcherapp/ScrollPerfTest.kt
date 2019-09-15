@@ -32,6 +32,7 @@ class ScrollPerfTest {
         assertionType = PerformanceTest.AssertionType.LESS_OR_EQUAL
     )
     fun testSecond() {
+        enableImprovements = true
         if (enableImprovements) {
             onView(ViewMatchers.withId(R.id.use_prefetcher_switch))
                 .perform(click())
@@ -46,11 +47,7 @@ class ScrollPerfTest {
 
         mainActivityActivityTestRule.startIteration()
         for (i in 0..10) {
-            device.swipe(200, 2000, 500, 500, 5)
-            SystemClock.sleep(500)
-        }
-        for (i in 0..5) {
-            device.swipe(200, 500, 500, 2000, 5)
+            device.swipe(200, 1500, 500, 500, 5)
             SystemClock.sleep(500)
         }
     }

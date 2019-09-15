@@ -4,6 +4,7 @@ package androidx.recyclerview.widget
 import android.view.View
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.abs
 
 internal class GapWorkerTaskPool : Iterable<GapWorker.Task> {
     private var tasksPoolHead = 0
@@ -26,7 +27,7 @@ internal class GapWorkerTaskPool : Iterable<GapWorker.Task> {
         for (recyclerView in recyclerViews) {
             if (recyclerView.windowVisibility == View.VISIBLE) {
                 val prefetchRegistry = recyclerView.mPrefetchRegistry
-                val velocity = Math.abs(prefetchRegistry.mPrefetchDx) + Math.abs(prefetchRegistry.mPrefetchDy)
+                val velocity = abs(prefetchRegistry.mPrefetchDx) + abs(prefetchRegistry.mPrefetchDy)
 
                 var i = 0
                 while (i < prefetchRegistry.mCount * 2) {

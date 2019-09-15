@@ -43,7 +43,7 @@ open class ActivityPerfTestRule<T: Activity>(activityClass: Class<T>): ActivityT
             val results = it.stopIteration()
             val res: Double = results?.get(annotation?.perfType?.type) as Double
 
-            Timber.d("PREFETCHER IS ${enableImprovements} TOTAL = ${results.get(PerformanceTest.PerfType.TOTAL_FRAMES.type).toString().padEnd(5,' ')} AVG_NUM_JANKY = ${results.get(PerformanceTest.PerfType.AVG_NUM_JANKY.type).toString().padEnd(5, ' ')} AVG_FRAME_TIME_95TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_95TH.type).toString().padEnd(5, ' ')}")
+            Timber.d("PR IS ${enableImprovements} T = ${results.get(PerformanceTest.PerfType.TOTAL_FRAMES.type).toString().padEnd(5,' ')} A_N_J = ${results.get(PerformanceTest.PerfType.AVG_NUM_JANKY.type).toString().padEnd(5, ' ')} A_90TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_90TH.type).toString().padEnd(3, ' ')} A_95TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_95TH.type).toString().padEnd(3, ' ')} A_99TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_99TH.type).toString().padEnd(3, ' ')}")
 
             val assertion = when(annotation?.assertionType) {
                 PerformanceTest.AssertionType.LESS -> res < annotation!!.threshold

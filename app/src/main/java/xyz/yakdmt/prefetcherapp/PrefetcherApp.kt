@@ -12,4 +12,4 @@ class PrefetcherApp : Application() {
     }
 }
 
-const val enableImprovements = true
+var enableImprovements = true
