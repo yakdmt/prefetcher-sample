@@ -7,23 +7,24 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.*
 import androidx.recyclerview.widget.attachToPreventViewPoolFromClearing
 import androidx.recyclerview.widget.factorInCreateTime
+import timber.log.Timber
 import xyz.yakdmt.prefetcher.BuildConfig
 import xyz.yakdmt.prefetcher.OffthreadViewCreator
 import xyz.yakdmt.prefetcher.RecyclerPrefetchingLogger
 import kotlin.math.max
 
-class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.RecycledViewPool(), Prefetcher {
+class PrefetchRecycledViewPool(activity: Activity) : RecyclerView.RecycledViewPool(), Prefetcher {
     private val offthreadViewCreator = OffthreadViewCreator(activity, ::putViewFromCreator)
     private val prefetchRegistry = if (BuildConfig.DEBUG) SparseIntArray() else null
     private val createdRegistry = if (BuildConfig.DEBUG) SparseIntArray() else null
 
     var listener: PrefetchedViewsCountListener? = null
 
-    override fun setPrefetchedViewsCount(viewType: Int, count: Int, holderCreator: (fakeParent: ViewGroup, viewType: Int) -> RecyclerView.ViewHolder) {
+    override fun setPrefetchedViewsCount(viewType: Int, count: Int, holderFactory: (fakeParent: ViewGroup, viewType: Int) -> RecyclerView.ViewHolder) {
         require(count > 0) { "Prefetched count should be > 0" }
         RecyclerPrefetchingLogger.log { "change views count: new=$count" }
 
-        offthreadViewCreator.setPrefetchBound(holderCreator, viewType, count)
+        offthreadViewCreator.setPrefetchBound(holderFactory, viewType, count)
 
         prefetchRegistry?.put(viewType, max(prefetchRegistry.get(viewType), count))
     }
@@ -90,7 +91,7 @@ class PrefetchRecycledViewPool(private val activity: Activity) : RecyclerView.Re
     private fun logUiThreadCreation(viewType: Int) {
         val created = createdRegistry?.get(viewType) ?: return
         val prefetch = prefetchRegistry!![viewType]
-        if (created > prefetch) Log.w("PrefetchViewPool", "ViewPool cache miss: created=$created, prefetch=$prefetch, cached=${getRecycledViewCount(viewType)}, holder=${getViewTypeName(viewType)}")
+        if (created > prefetch) Timber.w("ViewPool cache miss: created=$created, prefetch=$prefetch, cached=${getRecycledViewCount(viewType)}, holder=${getViewTypeName(viewType)}")
     }
 
     //TODO
