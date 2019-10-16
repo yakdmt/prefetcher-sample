@@ -2,6 +2,7 @@ package xyz.yakdmt.prefetcherapp
 
 import android.app.Activity
 import android.os.Build
+import android.os.Bundle
 import androidx.test.jank.IMonitor
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
@@ -43,7 +44,7 @@ open class ActivityPerfTestRule<T: Activity>(activityClass: Class<T>): ActivityT
             val results = it.stopIteration()
             val res: Double = results?.get(annotation?.perfType?.type) as Double
 
-            Timber.d("PR IS ${enableImprovements} T = ${results.get(PerformanceTest.PerfType.TOTAL_FRAMES.type).toString().padEnd(5,' ')} A_N_J = ${results.get(PerformanceTest.PerfType.AVG_NUM_JANKY.type).toString().padEnd(5, ' ')} A_90TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_90TH.type).toString().padEnd(3, ' ')} A_95TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_95TH.type).toString().padEnd(3, ' ')} A_99TH = ${results.get(PerformanceTest.PerfType.AVG_FRAME_TIME_99TH.type).toString().padEnd(3, ' ')}")
+            printMetricsToLogcat(results)
 
             val assertion = when(annotation?.assertionType) {
                 PerformanceTest.AssertionType.LESS -> res < annotation!!.threshold
@@ -63,6 +64,15 @@ open class ActivityPerfTestRule<T: Activity>(activityClass: Class<T>): ActivityT
             )
         }
         super.afterActivityFinished()
+    }
+
+    private fun printMetricsToLogcat(results: Bundle) {
+        val totalFrames = results.get(PerformanceTest.PerfType.TOTAL_FRAMES.type).toString().padEnd(5,' ')
+        val jankyFrames = results.get(PerformanceTest.PerfType.NUM_JANKY.type).toString().padEnd(5, ' ')
+        val percentile90 = results.get(PerformanceTest.PerfType.FRAME_TIME_90TH.type).toString().padEnd(3, ' ')
+        val percentile95 = results.get(PerformanceTest.PerfType.FRAME_TIME_95TH.type).toString().padEnd(3, ' ')
+        val percentile99 = results.get(PerformanceTest.PerfType.FRAME_TIME_99TH.type).toString().padEnd(3, ' ')
+        Timber.d("IS_WITH_OPTS = $enableImprovements TOTAL = $totalFrames JANKY = $jankyFrames P_90TH = $percentile90 P_95TH = $percentile95 P_99TH = $percentile99")
     }
 
     companion object {

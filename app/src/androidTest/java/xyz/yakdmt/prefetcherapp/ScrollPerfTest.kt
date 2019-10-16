@@ -27,12 +27,12 @@ class ScrollPerfTest {
     @Test
     @PerformanceTest(
         processName = PACKAGE_NAME,
-        perfType = PerformanceTest.PerfType.AVG_NUM_JANKY,
+        perfType = PerformanceTest.PerfType.NUM_JANKY,
         threshold = 1,
         assertionType = PerformanceTest.AssertionType.LESS_OR_EQUAL
     )
     fun testSecond() {
-        enableImprovements = true
+        enableImprovements = false
         if (enableImprovements) {
             onView(ViewMatchers.withId(R.id.use_prefetcher_switch))
                 .perform(click())
@@ -47,7 +47,7 @@ class ScrollPerfTest {
 
         mainActivityActivityTestRule.startIteration()
         for (i in 0..10) {
-            device.swipe(200, 1500, 500, 500, 5)
+            device.swipe(200, 1500, 500, 700, 5)
             SystemClock.sleep(500)
         }
     }

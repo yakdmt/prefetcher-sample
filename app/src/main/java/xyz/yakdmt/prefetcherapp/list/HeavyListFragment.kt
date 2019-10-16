@@ -55,7 +55,6 @@ class HeavyListFragment : Fragment() {
             }
         }
 
-
         viewPool.start()
         recyclerView.setRecycledViewPool(viewPool)
 

@@ -13,13 +13,12 @@ import java.util.*
 import java.util.regex.Pattern
 import kotlin.collections.ArrayList
 
-class PerfMonitor(
+internal class PerfMonitor(
     private val instrumentation: Instrumentation,
     private val process: String
 ) : IMonitor {
 
-    // Metrics accumulated for each iteration
-    private val accumulatedStats = EnumMap<JankStat, List<Number>>(JankStat::class.java)
+    private val stats = mutableMapOf<JankStat, Number>()
 
     // Patterns used for parsing dumpsys gfxinfo output
     enum class JankStat constructor(
@@ -33,7 +32,6 @@ class PerfMonitor(
             Pattern.compile("\\s*Janky frames: (\\d+) \\((\\d+(\\.\\d+))%\\)"), 2,
             Double::class.java
         ),
-        FRAME_TIME_50TH(Pattern.compile("\\s*50th percentile: (\\d+)ms"), 1, Int::class.java, true),
         FRAME_TIME_90TH(Pattern.compile("\\s*90th percentile: (\\d+)ms"), 1, Int::class.java),
         FRAME_TIME_95TH(Pattern.compile("\\s*95th percentile: (\\d+)ms"), 1, Int::class.java),
         FRAME_TIME_99TH(Pattern.compile("\\s*99th percentile: (\\d+)ms"), 1, Int::class.java);
@@ -64,28 +62,17 @@ class PerfMonitor(
         }
     }
 
-    init {
-        for (stat in JankStat.values()) {
-            when {
-                stat.type == Int::class.java -> accumulatedStats[stat] = ArrayList<Int>()
-                stat.type == Double::class.java -> accumulatedStats[stat] = ArrayList<Double>()
-                else -> // Shouldn't get here
-                    throw IllegalStateException("Unsupported JankStat type")
-            }
-        }
-    }
-
     @Throws(IOException::class)
     override fun startIteration() {
         // Clear out any previous data
         val stdout = executeShellCommand(
             String.format("dumpsys gfxinfo %s reset", process)
         )
-        val reader = BufferedReader(InputStreamReader(stdout))
+        val bufferedReader = BufferedReader(InputStreamReader(stdout))
 
-        reader.use { reader ->
-            // Read the output, but don't do anything with it
+        bufferedReader.use { reader ->
             while (reader.readLine() != null) {
+                // Read the output, but don't do anything with it
             }
         }
     }
@@ -94,7 +81,7 @@ class PerfMonitor(
     override fun stopIteration(): Bundle {
         // Dump the latest stats
         val stdout = executeShellCommand(String.format("dumpsys gfxinfo %s", process))
-        val reader = BufferedReader(InputStreamReader(stdout))
+        val bufferedReader = BufferedReader(InputStreamReader(stdout))
 
         // The frame stats section has the following output:
         // Total frames rendered: ###
@@ -104,7 +91,7 @@ class PerfMonitor(
         // 95th percentile: ##ms
         // 99th percentile: ##ms
 
-        reader.use { reader ->
+        bufferedReader.use { reader ->
             var line: String? = reader.readLine()
             do {
                 // Attempt to parse the line as a frame stat value
@@ -114,14 +101,8 @@ class PerfMonitor(
                         // Parse was successful. Add the numeric value to the accumulated list of
                         // values for that stat.
                         when {
-                            stat.type == Int::class.java -> {
-                                val stats = accumulatedStats[stat] as MutableList<Int>
-                                stats.add(Integer.valueOf(part))
-                            }
-                            stat.type == Double::class.java -> {
-                                val stats = accumulatedStats[stat] as MutableList<Double>
-                                stats.add(java.lang.Double.valueOf(part!!))
-                            }
+                            stat.type == Int::class.java -> stats[stat] = Integer.valueOf(part)
+                            stat.type == Double::class.java -> stats[stat] = java.lang.Double.valueOf(part)
                             else -> // Shouldn't get here
                                 throw IllegalStateException("Unsupported JankStat type")
                         }
@@ -140,25 +121,7 @@ class PerfMonitor(
             stat.reset()
         }
 
-        return getMetrics()
-    }
-
-    private fun putAvgMaxInteger(
-        metrics: Bundle, averageKey: String, maxKey: String,
-        values: List<Int>
-    ) {
-
-        metrics.putDouble(averageKey, computeAverageInt(values))
-        metrics.putInt(maxKey, Collections.max(values))
-    }
-
-    private fun putAvgMaxDouble(
-        metrics: Bundle, averageKey: String, maxKey: String,
-        values: List<Double>
-    ) {
-
-        metrics.putDouble(averageKey, computeAverageDouble(values))
-        metrics.putDouble(maxKey, Collections.max(values))
+        return metrics
     }
 
     private fun transformToPercentage(values: List<Int>, totals: List<Int>): List<Double> {
@@ -189,56 +152,13 @@ class PerfMonitor(
     override fun getMetrics(): Bundle {
         val metrics = Bundle()
 
-        // Retrieve the total number of frames
-        val totals = accumulatedStats[JankStat.TOTAL_FRAMES] as List<Int>
-
-        // Store avg, min and max of total frames
-        metrics.putInt(PerformanceTest.KEY_AVG_TOTAL_FRAMES, computeAverage(totals))
-        metrics.putInt(PerformanceTest.KEY_MAX_TOTAL_FRAMES, Collections.max(totals))
-        metrics.putInt(PerformanceTest.KEY_MIN_TOTAL_FRAMES, Collections.min(totals))
-
-        // Store average and max jank
-        putAvgMaxDouble(
-            metrics, PerformanceTest.KEY_AVG_NUM_JANKY, PerformanceTest.KEY_MAX_NUM_JANKY,
-            accumulatedStats[JankStat.NUM_JANKY] as List<Double>
-        )
-
-        // Store average and max percentile frame times
-        val statsFor50TH = accumulatedStats[JankStat.FRAME_TIME_50TH] as List<Int>
-        if (!statsFor50TH.isEmpty()) {
-            // 50th percentile frame is optional, because it wasn't available in the initial version
-            // of the gfxinfo service
-            putAvgMaxInteger(
-                metrics, PerformanceTest.KEY_AVG_FRAME_TIME_50TH_PERCENTILE,
-                PerformanceTest.KEY_MAX_FRAME_TIME_50TH_PERCENTILE, statsFor50TH
-            )
-        }
-        putAvgMaxInteger(
-            metrics, PerformanceTest.KEY_AVG_FRAME_TIME_90TH_PERCENTILE,
-            PerformanceTest.KEY_MAX_FRAME_TIME_90TH_PERCENTILE,
-            accumulatedStats[JankStat.FRAME_TIME_90TH] as List<Int>
-        )
-        putAvgMaxInteger(
-            metrics, PerformanceTest.KEY_AVG_FRAME_TIME_95TH_PERCENTILE,
-            PerformanceTest.KEY_MAX_FRAME_TIME_95TH_PERCENTILE,
-            accumulatedStats[JankStat.FRAME_TIME_95TH] as List<Int>
-        )
-        putAvgMaxInteger(
-            metrics, PerformanceTest.KEY_AVG_FRAME_TIME_99TH_PERCENTILE,
-            PerformanceTest.KEY_MAX_FRAME_TIME_99TH_PERCENTILE,
-            accumulatedStats[JankStat.FRAME_TIME_99TH] as List<Int>
-        )
+        metrics.putInt(PerformanceTest.KEY_TOTAL_FRAMES, stats[JankStat.TOTAL_FRAMES] as Int)
+        metrics.putDouble(PerformanceTest.KEY_NUM_JANKY, stats[JankStat.NUM_JANKY] as Double)
+        metrics.putInt(PerformanceTest.KEY_FRAME_TIME_90TH_PERCENTILE, stats[JankStat.FRAME_TIME_90TH] as Int)
+        metrics.putInt(PerformanceTest.KEY_FRAME_TIME_95TH_PERCENTILE, stats[JankStat.FRAME_TIME_95TH] as Int)
+        metrics.putInt(PerformanceTest.KEY_FRAME_TIME_99TH_PERCENTILE, stats[JankStat.FRAME_TIME_99TH] as Int)
 
         return metrics
-    }
-
-    private fun getMatchGroup(input: String, pattern: Pattern, groupIndex: Int): String? {
-        var ret: String? = null
-        val matcher = pattern.matcher(input)
-        if (matcher.matches()) {
-            ret = matcher.group(groupIndex)
-        }
-        return ret
     }
 
     /**
@@ -251,20 +171,4 @@ class PerfMonitor(
         return ParcelFileDescriptor.AutoCloseInputStream(stdout)
     }
 
-    private fun computeAverageDouble(values: Collection<Double>): Double {
-        var sum = 0.0
-        for (value in values) {
-            sum += value
-        }
-        return sum / values.size
-    }
-
-    /** Compute the average value from a collection of integers.  */
-    private fun computeAverageInt(values: Collection<Int>): Double {
-        var sum = 0.0
-        for (value in values) {
-            sum += value.toDouble()
-        }
-        return sum / values.size
-    }
 }
