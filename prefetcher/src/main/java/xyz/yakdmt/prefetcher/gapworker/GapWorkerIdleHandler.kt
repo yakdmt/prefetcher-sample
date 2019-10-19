@@ -40,7 +40,7 @@ internal class GapWorkerIdleHandler(
             if (!enabled || fromIdleCounter++ > 10) {
                 fromIdleCounter = 0
                 idleListenerRegistered = false
-                enabled = false //self disabling if we reach idle counter bound
+                enabled = false //self disabling if idle counter bound has been reached
                 return false
             }
 

@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.*
 import androidx.recyclerview.widget.ALLOW_THREAD_GAP_WORK
 import androidx.recyclerview.widget.findNestedRecyclerView
 import androidx.recyclerview.widget.viewType
+import timber.log.Timber
 import java.lang.ref.WeakReference
 
 private const val TYPE_ITEMS_CREATED_OUTSIDE = 0
@@ -122,7 +123,7 @@ internal class OffthreadViewCreator(
 
             end = nanoTimeIfNeed()
         } catch (e: Exception) {
-            Log.e("PrefetchHandler", "Error while prefetching viewHolder for viewtype=$viewType", e)
+            Timber.e("Error while prefetching viewHolder for viewtype=$viewType ${e.message}")
             return
         }
 

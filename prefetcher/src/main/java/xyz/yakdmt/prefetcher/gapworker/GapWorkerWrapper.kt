@@ -5,6 +5,7 @@ import android.view.View
 import xyz.yakdmt.prefetcher.gapworker.GapWorkerIdleHandler
 import xyz.yakdmt.prefetcher.gapworker.GapWorkerLogger
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 private const val DEADLINE_EPSILON_NS = 0.3 * 1_000_000/*ms as ns*/
 
@@ -40,7 +41,7 @@ internal class GapWorkerWrapper(private val gapWorker: GapWorker = sGapWorker!!)
 
         for (recyclerView in gapWorker.mRecyclerViews) {
             if (recyclerView.windowVisibility != View.VISIBLE) continue
-            latestFrameVsyncMs = Math.max(recyclerView.drawingTime, latestFrameVsyncMs)
+            latestFrameVsyncMs = max(recyclerView.drawingTime, latestFrameVsyncMs)
         }
 
         if (latestFrameVsyncMs == 0L) return
