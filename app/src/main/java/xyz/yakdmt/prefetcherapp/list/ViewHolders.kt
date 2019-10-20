@@ -23,6 +23,7 @@ object HeavyViewHolderFactory {
 
     fun createHolder(parent: ViewGroup, viewType: Int) : HeavyViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.list_item, parent, false)
+        //Simulation of long view creation
         Thread.sleep(20)
         return when (viewType) {
             TYPE_RED -> RedViewHolder(view)

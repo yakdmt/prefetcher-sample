@@ -127,7 +127,7 @@ internal class GapWorkerWrapper(private val gapWorker: GapWorker = sGapWorker!!)
         }
 
         val innerPrefetchRegistry = innerView.mPrefetchRegistry
-        innerPrefetchRegistry.collectPrefetchPositionsFromView(innerView, true)//todo try to resume
+        innerPrefetchRegistry.collectPrefetchPositionsFromView(innerView, true)//todo try to resume from previously bound position
         if (innerPrefetchRegistry.mCount == 0) return
 
         innerView.mState.prepareForNestedPrefetch(innerView.mAdapter)

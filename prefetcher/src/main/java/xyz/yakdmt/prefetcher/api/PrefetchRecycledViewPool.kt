@@ -82,7 +82,7 @@ class PrefetchRecycledViewPool(activity: Activity) : RecyclerView.RecycledViewPo
 
     private fun calculatePrefetchedCount(): Int {
         var result = 0
-        for (i in 0..10) {
+        for (i in 0..createdRegistry.size()) {
             result += createdRegistry[i]
         }
         return result
@@ -94,7 +94,7 @@ class PrefetchRecycledViewPool(activity: Activity) : RecyclerView.RecycledViewPo
         if (created > prefetch) Timber.w("ViewPool cache miss: created=$created, prefetch=$prefetch, cached=${getRecycledViewCount(viewType)}, holder=${getViewTypeName(viewType)}")
     }
 
-    //TODO
+    //TODO provide human-readable view type names
 //    private val viewTypeNames by lazy { SparseArray<String>() }
 //    private fun getViewTypeName(viewType: Int) = viewTypeNames.get(viewType) ?: activity.resources.getResourceName(viewType).also { viewTypeNames.put(viewType, it) }
 
